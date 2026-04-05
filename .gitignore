@@ -1,0 +1,7 @@
+# main: chỉ theo dõi Models
+/*
+!.gitignore
+!UngDungOnThiBangLai/
+UngDungOnThiBangLai/*
+!UngDungOnThiBangLai/Models/
+!UngDungOnThiBangLai/Models/**
