@@ -1,0 +1,81 @@
+﻿@{
+    ViewData["Title"] = "Bảng điều khiển Admin";
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4 text-uppercase fw-bold text-primary">Tổng quan hệ thống</h2>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-primary text-white shadow h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-people-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title text-uppercase opacity-75">Người dùng</h5>
+                        <h2 class="display-6 fw-bold">@ViewBag.TotalUsers</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white shadow h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-question-circle-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title text-uppercase opacity-75">Câu hỏi</h5>
+                        <h2 class="display-6 fw-bold">@ViewBag.TotalQuestions</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-warning text-dark shadow h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-card-checklist" style="font-size: 3rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title text-uppercase opacity-75">Hạng bằng lái</h5>
+                        <h2 class="display-6 fw-bold">@ViewBag.TotalCategories</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5" />
+
+    <div class="row mt-4 text-center">
+        <h4 class="mb-4">Phím tắt quản lý</h4>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-primary btn-lg w-100 py-4 shadow-sm mb-3">
+                <i class="bi bi-plus-square d-block mb-2"></i> Thêm Câu Hỏi
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-success btn-lg w-100 py-4 shadow-sm mb-3">
+                <i class="bi bi-list-ul d-block mb-2"></i> Danh Sách Câu Hỏi
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-dark btn-lg w-100 py-4 shadow-sm mb-3">
+                <i class="bi bi-gear-fill d-block mb-2"></i> Cấu Hình Hạng Bằng
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="#" class="btn btn-outline-danger btn-lg w-100 py-4 shadow-sm mb-3">
+                <i class="bi bi-box-arrow-right d-block mb-2"></i> Đăng Xuất
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+}
