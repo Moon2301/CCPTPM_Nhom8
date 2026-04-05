@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # wwwroot/images: thư mục ảnh biển báo được track qua .gitignore ở root repo
+
+# Đồng bộ với upstream/develop (Moon2301) — giảm conflict khi merge PR
+.gitignore.develop
