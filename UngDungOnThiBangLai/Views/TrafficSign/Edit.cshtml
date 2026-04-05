@@ -1,0 +1,75 @@
+﻿@model UngDungOnThiBangLai.Models.TrafficSignViewModel
+@{
+    ViewData["Title"] = "Chỉnh sửa biển báo";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-warning text-dark py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-pencil-square"></i> CẬP NHẬT BIỂN BÁO</h5>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Mã số biển</label>
+                                <input asp-for="Code" class="form-control" required />
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Tên biển báo</label>
+                                <input asp-for="Name" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại biển báo</label>
+                            <select asp-for="Category" class="form-select">
+                                <option value="Biển cấm">Biển cấm</option>
+                                <option value="Biển báo nguy hiểm">Biển báo nguy hiểm</option>
+                                <option value="Biển hiệu lệnh">Biển hiệu lệnh</option>
+                                <option value="Biển chỉ dẫn">Biển chỉ dẫn</option>
+                                <option value="Biển phụ">Biển phụ</option>
+                                <option value="Vạch kẻ đường">Vạch kẻ đường</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center">
+                        <label class="form-label fw-bold d-block">Ảnh hiện tại</label>
+                        <div class="border rounded p-2 mb-2 bg-light">
+                            <img id="signImgPreview" src="@Model.ExistingImageUrl" class="img-fluid" style="max-height: 200px;" />
+                        </div>
+                        <label class="form-label small text-muted">Thay đổi ảnh (không bắt buộc)</label>
+                        <input type="file" asp-for="ImageFile" class="form-control" id="signImgInput" accept="image/*" />
+                    </div>
+                </div>
+
+                <div class="text-end mt-4 border-top pt-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                    <button type="submit" class="btn btn-warning px-5 fw-bold">Cập nhật ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $("#signImgInput").change(function () {
+            const file = this.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function (e) { $("#signImgPreview").attr("src", e.target.result); }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+}
