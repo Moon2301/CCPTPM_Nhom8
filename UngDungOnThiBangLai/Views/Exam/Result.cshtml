@@ -1,0 +1,78 @@
+﻿@model IEnumerable<UngDungOnThiBangLai.Models.QuestionResultViewModel>
+
+@{
+    ViewData["Title"] = "Kết quả thi";
+    bool isPassed = ViewBag.IsPassed;
+    bool isFailedByCritical = ViewBag.IsFailedByCritical;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            @if (isPassed)
+            {
+                <div class="card border-0 shadow-lg rounded-4 bg-success text-white p-5 mb-4">
+                    <i class="bi bi-check-circle-fill display-1 mb-3"></i>
+                    <h1 class="fw-bold">CHÚC MỪNG: ĐẠT</h1>
+                    <p class="fs-4">Bạn đã vượt qua bài thi thử với số điểm @ViewBag.Score/@ViewBag.Total</p>
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow-lg rounded-4 bg-danger text-white p-5 mb-4">
+                    <i class="bi bi-x-circle-fill display-1 mb-3"></i>
+                    <h1 class="fw-bold">KẾT QUẢ: KHÔNG ĐẠT</h1>
+                    <p class="fs-4">Điểm số: @ViewBag.Score/@ViewBag.Total (Yêu cầu: @ViewBag.PassingScore)</p>
+                    @if (isFailedByCritical)
+                    {
+                        <div class="badge bg-warning text-dark fs-6 p-2 mt-2">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Bạn đã trả lời sai câu hỏi điểm liệt!
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="d-flex justify-content-center gap-3 mb-5">
+                <a asp-action="Index" class="btn btn-outline-primary btn-lg rounded-pill px-4">
+                    <i class="bi bi-arrow-left"></i> Về danh sách đề
+                </a>
+                <button class="btn btn-primary btn-lg rounded-pill px-4" onclick="window.print()">
+                    <i class="bi bi-printer"></i> In kết quả
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* Chi tiết từng câu *@
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h4 class="fw-bold mb-4">Chi tiết bài làm</h4>
+            @foreach (var (item, index) in Model.Select((v, i) => (v, i)))
+            {
+                <div class="card mb-3 border-0 shadow-sm rounded-3 @(item.IsCorrect ? "border-start border-5 border-success" : "border-start border-5 border-danger")">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="fw-bold text-dark">Câu @(index + 1) @(item.IsCritical ? "[ĐIỂM LIỆT]" : "")</h6>
+                            @if (item.IsCorrect)
+                            {
+                                <span class="text-success fw-bold small"><i class="bi bi-check-lg"></i> Đúng</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger fw-bold small"><i class="bi bi-x-lg"></i> Sai</span>
+                            }
+                        </div>
+                        <p class="mb-2">@item.QuestionText</p>
+
+                        @if (!item.IsCorrect)
+                        {
+                            <div class="p-2 bg-light rounded small mt-2">
+                                <strong class="text-success">Giải thích:</strong> @item.Explanation
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

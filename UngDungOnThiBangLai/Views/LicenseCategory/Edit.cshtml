@@ -1,0 +1,187 @@
+﻿@using UngDungOnThiBangLai.Models
+@model LicenseCategory
+
+<style>
+    /* Hiệu ứng focus cho input */
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+        border-width: 2px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white py-3 border-bottom border-2 border-primary">
+                    <h4 class="mb-0 fw-bold text-primary">CẤU HÌNH ĐỀ THI: @Model.Name</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Edit" method="post" id="editLicenseForm">
+                        <div asp-validation-summary="All" class="text-danger mb-3 fw-bold"></div>
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="Name" />
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tổng số câu hỏi/đề</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-list-ol"></i></span>
+                                    <input asp-for="TotalQuestions" type="number" class="form-control" placeholder="VD: 25">
+                                </div>
+                                <span asp-validation-for="TotalQuestions" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Thời gian làm bài (Phút)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-stopwatch"></i></span>
+                                    <input asp-for="TimeLimit" type="number" class="form-control" placeholder="VD: 19">
+                                </div>
+                                <span asp-validation-for="TimeLimit" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-success">Số câu đúng tối thiểu</label>
+                                <div class="input-group border-success">
+                                    <span class="input-group-text bg-success text-white"><i class="bi bi-check-circle"></i></span>
+                                    <input asp-for="MinimumPassScore" type="number" class="form-control border-success" placeholder="VD: 21">
+                                </div>
+                                <span asp-validation-for="MinimumPassScore" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">Số câu điểm liệt/đề</label>
+                                <div class="input-group border-danger">
+                                    <span class="input-group-text bg-danger text-white"><i class="bi bi-exclamation-octagon"></i></span>
+                                    <input asp-for="TotalCriticalQuestions" type="number" class="form-control border-danger" placeholder="VD: 1">
+                                </div>
+                                <span asp-validation-for="TotalCriticalQuestions" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-muted">Mô tả hạng bằng</label>
+                                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <div class="card border border-primary-subtle shadow-sm">
+                                <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold text-primary"><i class="bi bi-diagram-3-fill me-2"></i>CẤU HÌNH CHI TIẾT CHƯƠNG (MA TRẬN ĐỀ)</h6>
+                                    <button type="button" id="add-topic" class="btn btn-sm btn-primary rounded-pill px-3">
+                                        <i class="bi bi-plus-circle"></i> Thêm chương
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th style="width: 250px;">Tên chương</th>
+                                                <th>Mô tả chi tiết</th>
+                                                <th style="width: 120px;" class="text-center">Số câu/đề</th>
+                                                <th style="width: 50px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="topic-container">
+                                            @if (Model.QuestionTopics != null && Model.QuestionTopics.Any())
+                                            {
+                                                var topics = Model.QuestionTopics.ToList();
+                                                for (int i = 0; i < topics.Count; i++)
+                                                {
+                                                    <tr class="topic-item">
+                                                        <td>
+                                                            <input type="hidden" name="QuestionTopics[@i].Id" value="@topics[i].Id" />
+                                                            <input name="QuestionTopics[@i].Name" value="@topics[i].Name" class="form-control" required placeholder="Tên chương..." />
+                                                        </td>
+                                                        <td>
+                                                            @* Thêm ô nhập Mô tả *@
+                                                            <input name="QuestionTopics[@i].Description" value="@topics[i].Description" class="form-control" placeholder="Ghi chú nội dung..." />
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="QuestionTopics[@i].NumberOfQuestionsInExam" value="@topics[i].NumberOfQuestionsInExam" class="form-control text-center" required min="1" />
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-link text-danger remove-topic p-0"><i class="bi bi-trash fs-5"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                    <div id="no-topic-msg" class="text-center py-3 @(Model.QuestionTopics?.Any() == true ? "d-none" : "")">
+                                        <p class="text-muted small mb-0">Chưa có cấu hình chương nào. Vui lòng thêm chương để hệ thống có thể bốc đề.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 d-flex gap-2 justify-content-end">
+                            <a asp-action="Index" class="btn btn-light px-4 border">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary px-5 shadow">
+                                <i class="bi bi-save"></i> LƯU CẤU HÌNH
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* Đảm bảo đã có jQuery, nếu layout chưa có thì thêm dòng dưới *@
+    @* <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> *@
+
+    <script>
+        $(document).ready(function () {
+            let topicIndex = $('#topic-container tr.topic-item').length;
+
+            $('#add-topic').click(function (e) {
+                e.preventDefault();
+                $('#no-topic-msg').addClass('d-none');
+
+                let nextIdx = $('#topic-container tr.topic-item').length;
+
+                let html = `
+                   <tr class="topic-item">
+                        <td>
+                            <input name="QuestionTopics[${topicIndex}].Name" class="form-control" required placeholder="Tên chương..." />
+                        </td>
+                        <td>
+                            <input name="QuestionTopics[${topicIndex}].Description" class="form-control" placeholder="Ghi chú nội dung..." />
+                        </td>
+                        <td>
+                            <input type="number" name="QuestionTopics[${topicIndex}].NumberOfQuestionsInExam" class="form-control text-center" value="1" required min="1" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-link text-danger remove-topic p-0"><i class="bi bi-trash fs-5"></i></button>
+                        </td>
+                    </tr>`;
+
+                $('#topic-container').append(html);
+                topicIndex++; 
+            });
+
+            $(document).on('click', '.remove-topic', function () {
+                $(this).closest('tr').remove();
+                if ($('#topic-container tr.topic-item').length === 0) {
+                    $('#no-topic-msg').removeClass('d-none');
+                }
+            });
+
+            $('#editLicenseForm').submit(function () {
+                $('#topic-container tr.topic-item').each(function (index, row) {
+                    $(row).find('input').each(function () {
+                        let name = $(this).attr('name');
+                        if (name) {
+                            let newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('name', newName);
+                        }
+                    });
+                });
+                return true; 
+            });
+        });
+    </script>
+}

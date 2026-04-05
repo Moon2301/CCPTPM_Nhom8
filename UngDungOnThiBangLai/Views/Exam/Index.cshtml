@@ -1,0 +1,35 @@
+﻿@model IEnumerable<UngDungOnThiBangLai.Models.LicenseCategory>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">CHỌN HẠNG BẰNG THI THỬ</h1>
+        <p class="text-muted">Hệ thống tự động tạo đề dựa trên kho 600 câu hỏi chuẩn 2026</p>
+    </div>
+
+    <div class="row justify-content-center">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden h-100">
+                    <div class="card-body p-4 text-center">
+                        <div class="display-4 text-primary fw-bold mb-2">@item.Name</div>
+                        <h4 class="card-title text-dark">@item.Description</h4>
+                        <hr>
+                        <div class="d-flex justify-content-around mb-4">
+                            <div><i class="bi bi-question-circle"></i> @item.TotalQuestions Câu</div>
+                            <div><i class="bi bi-clock"></i> @item.TimeLimit Phút</div>
+                            <div><i class="bi bi-check-all"></i> Đạt @item.MinimumPassScore/@item.TotalQuestions</div>
+                        </div>
+
+                        <form asp-action="CreateExam" method="post">
+                            <input type="hidden" name="categoryId" value="@item.Id" />
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill shadow">
+                                <i class="bi bi-play-fill"></i> BẮT ĐẦU THI NGAY
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

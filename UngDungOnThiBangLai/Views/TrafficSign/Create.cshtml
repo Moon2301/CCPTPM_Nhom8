@@ -1,0 +1,130 @@
+@model UngDungOnThiBangLai.Models.TrafficSignViewModel
+
+@{
+    ViewData["Title"] = "Thêm biển báo mới";
+}
+
+<div class="container mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-signpost-2-fill"></i> THÊM BIỂN BÁO MỚI</h5>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Mã số biển (Code)</label>
+                                <input asp-for="Code" class="form-control" placeholder="Vd: P.102" required />
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Tên biển báo</label>
+                                <input asp-for="Name" class="form-control" placeholder="Vd: Cấm đi ngược chiều" required />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại biển báo</label>
+                            <select asp-for="Category" class="form-select">
+                                <option value="Biển cấm">Biển cấm</option>
+                                <option value="Biển báo nguy hiểm">Biển báo nguy hiểm</option>
+                                <option value="Biển hiệu lệnh">Biển hiệu lệnh</option>
+                                <option value="Biển chỉ dẫn">Biển chỉ dẫn</option>
+                                <option value="Biển phụ">Biển phụ</option>
+                                <option value="Vạch kẻ đường">Vạch kẻ đường</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả ý nghĩa</label>
+                            <textarea asp-for="Description" class="form-control" rows="5" placeholder="Nhập chi tiết ý nghĩa và quy định của biển báo..."></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Hình ảnh biển báo</label>
+                        <div id="drop-zone" class="drop-zone-container">
+                            <div class="drop-zone-content">
+                                <i class="bi bi-cloud-arrow-up text-primary" style="font-size: 3rem;"></i>
+                                <p class="mb-0">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                                <small class="text-muted">(Định dạng: JPG, PNG, WebP)</small>
+                            </div>
+                            <input type="file" asp-for="ImageFile" class="d-none" id="signImgInput" accept="image/*" />
+                            <img id="signImgPreview" src="@(Model?.ExistingImageUrl ?? "#")"
+                                 class="img-fluid rounded @(string.IsNullOrEmpty(Model?.ExistingImageUrl) ? "d-none" : "")"
+                                 style="max-height: 250px; position: relative; z-index: 10;" />
+                        </div>
+                        <div class="text-center mt-2">
+                            <button type="button" id="btn-remove-img" class="btn btn-sm btn-outline-danger d-none">Xóa ảnh đã chọn</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4 border-top pt-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save"></i> Lưu biển báo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('signImgInput');
+        const imgPreview = document.getElementById('signImgPreview');
+        const zoneContent = document.querySelector('.drop-zone-content');
+
+        // Click vào vùng drop zone thì kích hoạt input file ẩn
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Hiệu ứng khi kéo file đè lên vùng drop zone
+        ['dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+
+        // Xử lý khi thả file
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files; // Gán file đã thả vào input
+                handlePreview(files[0]);
+            }
+        });
+
+        // Xử lý khi chọn file kiểu truyền thống
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) handlePreview(this.files[0]);
+        });
+
+        function handlePreview(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imgPreview.src = e.target.result;
+                    imgPreview.classList.remove('d-none');
+                    zoneContent.classList.add('d-none'); // Ẩn chữ đi
+                    document.getElementById('btn-remove-img').classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Nút xóa ảnh đã chọn
+        document.getElementById('btn-remove-img').addEventListener('click', function() {
+            fileInput.value = "";
+            imgPreview.src = "#";
+            imgPreview.classList.add('d-none');
+            zoneContent.classList.remove('d-none');
+            this.classList.add('d-none');
+        });
+    </script>
+}

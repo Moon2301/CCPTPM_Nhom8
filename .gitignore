@@ -1,7 +1,8 @@
-# main: chỉ theo dõi Models
-/*
-!.gitignore
-!UngDungOnThiBangLai/
-UngDungOnThiBangLai/*
-!UngDungOnThiBangLai/Models/
-!UngDungOnThiBangLai/Models/**
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+**/node_modules/
+
+.gitignore.develop
