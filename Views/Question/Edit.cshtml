@@ -1,0 +1,329 @@
+﻿@model UngDungOnThiBangLai.Models.CreateQuestionViewModel
+
+@{
+    ViewData["Title"] = "Chỉnh sửa câu hỏi";
+    string currentQuestionImg = ViewBag.ImageUrl as string;
+    bool hasQuestionImg = !string.IsNullOrEmpty(currentQuestionImg);
+}
+
+<style>
+    /* CSS Drag & Drop như cũ của bạn */
+    .drop-zone {
+        border: 2px dashed #ffc107;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        background: #fffdf5;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+        .drop-zone:hover {
+            border: 2px solid #ffc107;
+            background-color: #fff9e6;
+        }
+
+        .drop-zone.dragover {
+            border: 3px solid #0d6efd;
+            background-color: #e9ecef;
+        }
+
+    .preview-img {
+        max-height: 150px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .small-zone {
+        padding: 10px;
+        min-height: 100px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-warning"><i class="bi bi-pencil-square"></i> CHỈNH SỬA CÂU HỎI</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary shadow-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    </div>
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="mainForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row">
+            @* CỘT TRÁI: THÔNG TIN VĂN BẢN *@
+            <div class="col-md-7">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Hạng bằng lái</label>
+                                <select asp-for="LicenseCategoryId" id="LicenseCategoryId" class="form-select border-2 shadow-sm"
+                                        asp-items="@(ViewBag.Categories as SelectList)" required>
+                                    <option value="">-- Chọn hạng bằng --</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Chương câu hỏi</label>
+                                <select asp-for="QuestionTopicId" id="QuestionTopicId" class="form-select border-2 shadow-sm" required>
+                                    <option value="">-- Đang tải... --</option>
+                                </select>
+                                @* INPUT ẨN NÀY RẤT QUAN TRỌNG *@
+                                <input type="hidden" id="SelectedTopicId" value="@Model.QuestionTopicId" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Tiêu đề câu hỏi</label>
+                                <textarea asp-for="QuestionText" class="form-control border-2" rows="4" required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold text-success">Giải thích đáp án</label>
+                                <textarea asp-for="Explanation" class="form-control" rows="2" placeholder="Giải thích vì sao đáp án này đúng..."></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check form-switch p-3 bg-light rounded border border-danger-subtle">
+                                    <input asp-for="IsCritical" class="form-check-input ms-0 me-3" type="checkbox">
+                                    <label class="form-check-label fw-bold text-danger">Đánh dấu là câu hỏi ĐIỂM LIỆT</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* CỘT PHẢI: ẢNH MINH HỌA *@
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 fw-bold text-primary">Ảnh minh họa câu hỏi</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small text-muted">Kéo thả hoặc nhấn để đổi ảnh</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger @(hasQuestionImg ? "" : "d-none")" id="remove-question-img">
+                                    <i class="bi bi-trash"></i> Xóa ảnh
+                                </button>
+                            </div>
+
+                            <div class="drop-zone" id="question-drop-zone">
+                                <div class="drop-info @(hasQuestionImg ? "d-none" : "")">
+                                    <i class="bi bi-cloud-arrow-up fs-1 text-warning"></i>
+                                    <p class="small mb-0 mt-2">Chọn ảnh mới (JPG, PNG)</p>
+                                </div>
+                                <input type="file" asp-for="ImageFile" class="d-none sign-img-input" accept="image/*">
+                                <img src="@currentQuestionImg" class="preview-img @(hasQuestionImg ? "" : "d-none") mt-2">
+                                <input type="hidden" name="ImageUrl" value="@currentQuestionImg" id="QuestionImageUrl" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* PHẦN ĐÁP ÁN *@
+        <div class="card border-0 shadow-sm mb-5">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-primary">Các phương án trả lời</h5>
+                <button type="button" id="add-answer" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm">
+                    <i class="bi bi-plus-circle"></i> Thêm đáp án
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="answer-container">
+                    @for (int i = 0; i < Model.Answers.Count; i++)
+                    {
+                        var hasImg = !string.IsNullOrEmpty(Model.Answers[i].imgUrl);
+                        <div class="answer-item card p-3 mb-3 border-light shadow-sm">
+                            <div class="row align-items-center g-3">
+                                <div class="col-auto">
+                                    <div class="form-check">
+                                        <input type="radio" name="CorrectAnswerIndex" value="@i" @(Model.Answers[i].IsCorrect ? "checked" : "") class="form-check-input border-primary">
+                                        <label class="form-check-label fw-bold text-success small">Đúng</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <input type="text" name="Answers[@i].AnswerText" value="@Model.Answers[i].AnswerText" class="form-control" required>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input toggle-image" type="checkbox" id="toggleImg@i" @(hasImg ? "checked" : "")>
+                                        <label class="form-check-label small" for="toggleImg@i">Ảnh</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="button" class="btn btn-link text-danger remove-answer p-0 @(i == 0 ? "d-none" : "")"><i class="bi bi-trash fs-5"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="answer-image-section mt-3" style="@(hasImg ? "display:block" : "display:none")">
+                                <div class="drop-zone small-zone">
+                                    <div class="drop-info @(hasImg ? "d-none" : "")">
+                                        <p class="small mb-0">Chọn ảnh đáp án</p>
+                                    </div>
+                                    <input type="file" name="Answers[@i].ImageFile" class="d-none sign-img-input" accept="image/*">
+                                    <img src="@Model.Answers[i].imgUrl" class="preview-img @(hasImg ? "" : "d-none")" style="max-height: 80px;">
+                                    <input type="hidden" name="Answers[@i].ImageUrl" value="@Model.Answers[i].imgUrl" />
+                                </div>
+                            </div>
+                            <input type="hidden" name="Answers[@i].IsCorrect" value="@(Model.Answers[i].IsCorrect ? "true" : "false")">
+                        </div>
+                    }
+                </div>
+                <div class="mt-4 text-center">
+                    <button type="submit" class="btn btn-warning btn-lg px-5 shadow rounded-pill fw-bold">LƯU THAY ĐỔI</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // 1. CHUẨN BỊ BIẾN VÀ HÀM TẢI TOPIC
+            let answerIndex = @Model.Answers.Count;
+            const selectedTopicId = $('#SelectedTopicId').val(); // Lấy ID đã lưu trong Model
+
+            function loadTopics(categoryId, selectedId) {
+                const topicSelect = $('#QuestionTopicId');
+                topicSelect.empty().append('<option value="">-- Đang tải... --</option>');
+
+                if (categoryId) {
+                    $.ajax({
+                        url: '/Question/GetTopicsByCategory',
+                        type: 'GET',
+                        data: { categoryId: categoryId },
+                        success: function (data) {
+                            topicSelect.empty().append('<option value="">-- Chọn chương --</option>');
+                            $.each(data, function (index, item) {
+                                // Kiểm tra nếu ID trùng với ID đã chọn của câu hỏi thì gán 'selected'
+                                const isSelected = (item.id == selectedId) ? 'selected' : '';
+                                topicSelect.append(`<option value="${item.id}" ${isSelected}>${item.name}</option>`);
+                            });
+                        },
+                        error: function () {
+                            topicSelect.empty().append('<option value="">-- Lỗi tải chương --</option>');
+                        }
+                    });
+                } else {
+                    topicSelect.empty().append('<option value="">-- Chọn hạng bằng lái trước --</option>');
+                }
+            }
+
+            // 2. KÍCH HOẠT LOAD TOPIC KHI LOAD TRANG & KHI THAY ĐỔI HẠNG BẰNG
+            const initCategoryId = $('#LicenseCategoryId').val();
+            if (initCategoryId) {
+                loadTopics(initCategoryId, selectedTopicId);
+            }
+
+            $('#LicenseCategoryId').on('change', function () {
+                const catId = $(this).val();
+                loadTopics(catId, null); // Khi đổi hạng bằng thì không cần selectedId cũ
+            });
+
+            // 3. LOGIC XỬ LÝ ẢNH (DRAG & DROP)
+            function initDragAndDrop(container) {
+                const dropZone = container.find('.drop-zone');
+                const fileInput = container.find('.sign-img-input');
+                const previewImg = container.find('.preview-img');
+                const dropInfo = container.find('.drop-info');
+                const removeBtn = container.closest('.mb-3, .answer-image-section').find('.btn-remove-image');
+
+                dropZone.off('click').on('click', function () {
+                    fileInput.trigger('click');
+                });
+
+                dropZone.on('dragover', function (e) {
+                    e.preventDefault();
+                    $(this).addClass('dragover');
+                });
+
+                dropZone.on('dragleave drop', function () {
+                    $(this).removeClass('dragover');
+                });
+
+                dropZone.on('drop', function (e) {
+                    e.preventDefault();
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (files.length > 0) {
+                        fileInput[0].files = files;
+                        handlePreview(files[0], previewImg, dropInfo, removeBtn);
+                    }
+                });
+
+                fileInput.on('change', function () {
+                    if (this.files.length > 0) {
+                        handlePreview(this.files[0], previewImg, dropInfo, removeBtn);
+                    }
+                });
+            }
+
+            function handlePreview(file, previewImg, dropInfo, removeBtn) {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.attr('src', e.target.result).removeClass('d-none');
+                    if (dropInfo) dropInfo.addClass('d-none');
+                    if (removeBtn) removeBtn.removeClass('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Xóa ảnh (Edit)
+            $(document).on('click', '.btn-remove-image', function(e) {
+                e.preventDefault();
+                const container = $(this).closest('.mb-3, .answer-image-section');
+                container.find('.sign-img-input').val('');
+                container.find('.preview-img').attr('src', '#').addClass('d-none');
+                container.find('.drop-info').removeClass('d-none');
+                $(this).addClass('d-none');
+                container.find('input[type="hidden"][name$=".ImageUrl"]').val('');
+            });
+
+            // Khởi tạo các vùng ảnh hiện có
+            initDragAndDrop($('#question-drop-zone').parent());
+            $('.answer-item').each(function() {
+                initDragAndDrop($(this).find('.answer-image-section'));
+            });
+
+            // 4. QUẢN LÝ ĐÁP ÁN (ADD/REMOVE/RE-INDEX)
+            $(document).on("click", ".remove-answer", function () {
+                const item = $(this).closest(".answer-item");
+                item.fadeOut(200, function() {
+                    $(this).remove();
+                    reIndexAnswers();
+                });
+            });
+
+            function reIndexAnswers() {
+                $('.answer-item').each(function(idx) {
+                    $(this).find('input[type="radio"]').val(idx);
+                    $(this).find('input[type="text"]').attr('name', `Answers[${idx}].AnswerText`);
+                    $(this).find('input[type="file"]').attr('name', `Answers[${idx}].ImageFile`);
+                    $(this).find('input[type="hidden"][name$=".IsCorrect"]').attr('name', `Answers[${idx}].IsCorrect`);
+                    $(this).find('input[type="hidden"][name$=".ImageUrl"]').attr('name', `Answers[${idx}].ImageUrl`);
+                    $(this).find('.toggle-image').attr('id', `toggleImg${idx}`);
+                    $(this).find('label.toggle-image').attr('for', `toggleImg${idx}`);
+                });
+                answerIndex = $('.answer-item').length;
+            }
+
+            $("#mainForm").submit(function () {
+                let selectedIndex = $("input[name='CorrectAnswerIndex']:checked").val();
+                $("input[name$='.IsCorrect']").val("false");
+                if (selectedIndex !== undefined) {
+                    $(`input[name='Answers[${selectedIndex}].IsCorrect']`).val("true");
+                }
+            });
+        });
+    </script>
+}
