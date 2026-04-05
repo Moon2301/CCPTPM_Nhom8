@@ -36,6 +36,7 @@ builder.Services.AddAuthentication(options =>
 
 // Chạy database seeding khi ứng dụng khởi động
 builder.Services.AddScoped<IDataSeedService, DataSeedService>();
+builder.Services.AddScoped<IExamService, ExamService>();
 
 builder.Services.AddCors(options =>
 {
