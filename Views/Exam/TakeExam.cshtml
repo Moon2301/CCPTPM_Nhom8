@@ -1,0 +1,240 @@
+﻿@model UngDungOnThiBangLai.Models.Exam
+
+@{
+    ViewData["Title"] = "Đang thi: " + Model.Name;
+}
+
+<style>
+    .question-nav-item {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+
+        .question-nav-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .question-nav-item.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .question-nav-item.answered {
+            background-color: #198754;
+            color: white;
+            border-color: #198754;
+        }
+
+    .answer-option {
+        cursor: pointer;
+        border: 2px solid #f8f9fa;
+        transition: all 0.2s;
+        border-radius: 10px;
+    }
+
+        .answer-option:hover {
+            background-color: #f1f3f5;
+        }
+
+        .answer-option.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+
+    #timer {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .sticky-top-custom {
+        position: sticky;
+        top: 20px;
+    }
+</style>
+
+<div class="container-fluid py-4 px-5">
+    <div class="row">
+        @* CỘT TRÁI: NỘI DUNG CÂU HỎI *@
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">Câu hỏi <span id="current-question-num">1</span>/@Model.TotalQuestions</h4>
+                    <span class="badge bg-secondary px-3 py-2" id="category-badge">@Model.LicenseCategory.Name</span>
+                </div>
+
+                <div id="question-content-area">
+                    @for (int i = 0; i < Model.ExamQuestions.Count; i++)
+                    {
+                        var eq = Model.ExamQuestions.ElementAt(i);
+                        <div class="question-wrap @(i == 0 ? "" : "d-none")" data-index="@i" data-id="@eq.QuestionId">
+                            <h5 class="mb-4 fw-normal">@eq.Question.QuestionText</h5>
+
+                            @if (!string.IsNullOrEmpty(eq.Question.ImageUrl))
+                            {
+                                <div class="text-center mb-4">
+                                    <img src="@eq.Question.ImageUrl" class="img-fluid rounded-3 shadow-sm" style="max-height: 300px;">
+                                </div>
+                            }
+
+                            <div class="answers-list">
+                                @foreach (var ans in eq.Question.Answers)
+                                {
+                                    <div class="answer-option p-3 mb-3 d-flex align-items-center shadow-sm" data-ans-id="@ans.Id">
+                                        <div class="form-check mb-0">
+                                            <input class="form-check-input d-none" type="radio" name="q_@eq.QuestionId" value="@ans.Id">
+                                            <span class="fw-bold me-3 text-primary answer-prefix"></span>
+                                        </div>
+                                        <div>@ans.AnswerText</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button class="btn btn-outline-primary px-4 rounded-pill" id="btn-prev"><i class="bi bi-chevron-left"></i> Câu trước</button>
+                    <button class="btn btn-primary px-4 rounded-pill" id="btn-next">Câu tiếp theo <i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+
+        @* CỘT PHẢI: ĐỒNG HỒ & DANH SÁCH CÂU *@
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 rounded-4 p-4 sticky-top-custom">
+                <div class="text-center mb-4">
+                    <div class="small text-muted text-uppercase fw-bold">Thời gian còn lại</div>
+                    <div id="timer">--:--</div>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Danh sách câu hỏi</h6>
+                    <span class="small text-muted"><span id="answered-count">0</span>/@Model.TotalQuestions câu</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    @for (int i = 0; i < Model.TotalQuestions; i++)
+                    {
+                        <div class="question-nav-item @(i == 0 ? "active" : "")" data-target="@i">@(i + 1)</div>
+                    }
+                </div>
+
+                <button class="btn btn-danger btn-lg w-100 rounded-pill shadow" id="btn-submit-exam">
+                    <i class="bi bi-send-check-fill me-2"></i> NỘP BÀI THI
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Form ẩn để nộp dữ liệu *@
+<form id="hidden-submit-form" asp-action="SubmitExam" method="post" class="d-none">
+    <input type="hidden" name="ExamId" value="@Model.Id" />
+    <div id="answers-input-container"></div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let currentIndex = 0;
+            const totalQuestions = @Model.TotalQuestions;
+            let timeSeconds = @Model.TimeLimit * 60;
+            const userAnswers = {}; // Lưu dưới dạng { QuestionId: AnswerId }
+
+            // 1. Logic Đếm ngược
+            const timerInterval = setInterval(function () {
+                let mins = Math.floor(timeSeconds / 60);
+                let secs = timeSeconds % 60;
+                $('#timer').text(`${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`);
+
+                if (timeSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Hết thời gian làm bài!");
+                    submitExam();
+                }
+                timeSeconds--;
+            }, 1000);
+
+            // 2. Chuyển câu hỏi
+            function goToQuestion(index) {
+                if (index < 0 || index >= totalQuestions) return;
+
+                currentIndex = index;
+                $('.question-wrap').addClass('d-none');
+                $(`.question-wrap[data-index="${currentIndex}"]`).removeClass('d-none');
+
+                $('.question-nav-item').removeClass('active');
+                $(`.question-nav-item[data-target="${currentIndex}"]`).addClass('active');
+
+                $('#current-question-num').text(currentIndex + 1);
+
+                // Ẩn/Hiện nút
+                $('#btn-prev').toggleClass('invisible', currentIndex === 0);
+                $('#btn-next').toggleClass('d-none', currentIndex === totalQuestions - 1);
+            }
+
+            $('.question-nav-item').click(function () {
+                goToQuestion($(this).data('target'));
+            });
+
+            $('#btn-next').click(function () { goToQuestion(currentIndex + 1); });
+            $('#btn-prev').click(function () { goToQuestion(currentIndex - 1); });
+
+            // 3. Chọn đáp án
+            $('.answer-option').click(function () {
+                const wrap = $(this).closest('.question-wrap');
+                const qId = wrap.data('id');
+                const ansId = $(this).data('ans-id');
+
+                // Update UI
+                wrap.find('.answer-option').removeClass('selected');
+                $(this).addClass('selected');
+                wrap.find('input[type="radio"]').prop('checked', false);
+                $(this).find('input[type="radio"]').prop('checked', true);
+
+                // Lưu dữ liệu
+                userAnswers[qId] = ansId;
+
+                // Update Nav
+                $(`.question-nav-item[data-target="${wrap.data('index')}"]`).addClass('answered');
+                $('#answered-count').text(Object.keys(userAnswers).length);
+            });
+
+            // 4. Nộp bài
+            $('#btn-submit-exam').click(function () {
+                if (confirm("Bạn có chắc chắn muốn nộp bài?")) {
+                    submitExam();
+                }
+            });
+
+            function submitExam() {
+                const container = $('#answers-input-container');
+                container.empty();
+
+                // Convert object sang input để post về server
+                Object.keys(userAnswers).forEach(qId => {
+                    container.append(`<input type="hidden" name="Answers[${qId}]" value="${userAnswers[qId]}" />`);
+                });
+
+                $('#hidden-submit-form').submit();
+            }
+
+            // Đánh số thứ tự A, B, C, D cho đáp án
+            $('.answers-list').each(function() {
+                $(this).find('.answer-prefix').each(function(i) {
+                    $(this).text((i + 1) + ".");
+                });
+            });
+        });
+    </script>
+}
