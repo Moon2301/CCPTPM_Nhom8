@@ -1,0 +1,209 @@
+﻿@model IEnumerable<UngDungOnThiBangLai.Models.QuestionListViewModel>
+
+@{
+    ViewData["Title"] = "Quản lý câu hỏi";
+}
+
+@section Styles {
+    <style>
+        .question-card {
+            transition: transform 0.2s;
+            border-left: 5px solid #13547a;
+        }
+
+            .question-card:hover {
+                transform: scale(1.01);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            }
+
+        .badge-critical {
+            background-color: #ff4d4d;
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark"><i class="bi bi-journal-text me-2"></i>KHO CÂU HỎI</h2>
+            <p class="text-muted">Quản lý nội dung và đáp án các hạng bằng lái</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary btn-lg shadow">
+            <i class="bi bi-plus-lg"></i> Thêm câu hỏi mới
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="searchString" class="form-control border-start-0" placeholder="Tìm nội dung..." value="@Context.Request.Query["searchString"]">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select name="categoryId" id="categoryIdFilter" class="form-select">
+                        <option value="">-- Tất cả hạng --</option>
+                        @foreach (var cat in ViewBag.Categories)
+                        {
+                            <!option value="@cat.Id" @(ViewBag.SelectedCategory?.ToString() == cat.Id.ToString() ? "selected" : "")>@cat.Name</!option>
+                        }
+                    </select>
+                </div>
+
+                @* FIX: Sửa lại phần Select Topic *@
+                <div class="col-md-3">
+                    <select name="topicId" id="topicIdFilter" class="form-select">
+                        <option value="">-- Tất cả chương --</option>
+                        @if (ViewBag.Topics != null)
+                        {
+                            @foreach (var t in ViewBag.Topics)
+                            {
+                                <!option value="@t.Id" @(Context.Request.Query["topicId"] == t.Id.ToString() ? "selected" : "")>@t.Name</!option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-dark w-100">Lọc</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-clockwise"></i></a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-12 mb-3">
+                <div class="card question-card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-4 text-center" style="width: 100px;">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" class="rounded shadow-sm" style="width: 80px; height: 80px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="mb-2">
+                                <span class="badge bg-info text-dark me-2">Hạng @item.CategoryName</span>
+                                @* HIỂN THỊ TÊN CHƯƠNG *@
+                                <span class="badge bg-secondary me-2">@item.TopicName</span>
+
+                                @if (item.IsCritical)
+                                {
+                                    <span class="badge badge-critical">CÂU ĐIỂM LIỆT</span>
+                                }
+                                <small class="text-muted ms-2">ID: #@item.Id</small>
+                            </div>
+                            <h5 class="card-title fw-semibold text-dark">@item.QuestionText</h5>
+                            <p class="text-muted small mb-0"><i class="bi bi-layers me-1"></i> Loại: @item.QuestionType</p>
+                        </div>
+
+                        <div class="ms-auto text-end" style="min-width: 150px;">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-warning btn-sm border-0">
+                                <i class="bi bi-pencil-fill fs-5"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Xóa câu hỏi này?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm border-0">
+                                    <i class="bi bi-trash-fill fs-5"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @* Nút Quay lại *@
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@(ViewBag.CurrentPage - 1)"
+                       asp-route-searchString="@ViewBag.SearchString"
+                       asp-route-categoryId="@ViewBag.CategoryId"
+                       asp-route-topicId="@ViewBag.TopicId">Trước</a>
+                </li>
+
+                @* Hiển thị danh sách số trang *@
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    @if (i == 1 || i == ViewBag.TotalPages || (i >= ViewBag.CurrentPage - 2 && i <= ViewBag.CurrentPage + 2))
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-searchString="@ViewBag.SearchString"
+                               asp-route-categoryId="@ViewBag.CategoryId"
+                               asp-route-topicId="@ViewBag.TopicId">@i</a>
+                        </li>
+                    }
+                    else if (i == ViewBag.CurrentPage - 3 || i == ViewBag.CurrentPage + 3)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                @* Nút Tiếp *@
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@(ViewBag.CurrentPage + 1)"
+                       asp-route-searchString="@ViewBag.SearchString"
+                       asp-route-categoryId="@ViewBag.CategoryId"
+                       asp-route-topicId="@ViewBag.TopicId">Sau</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Lắng nghe sự kiện change của select Category
+            $('select[name="categoryId"]').change(function () {
+                var catId = $(this).val();
+                var topicSelect = $('select[name="topicId"]'); // Đã khớp với name="topicId" ở trên
+
+                topicSelect.empty().append('<option value="">-- Tất cả chương --</option>');
+
+                if (catId) {
+                    $.getJSON('/Question/GetTopicsByCategory', { categoryId: catId }, function (data) {
+                        $.each(data, function (i, item) {
+                            topicSelect.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}
